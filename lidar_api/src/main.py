@@ -12,23 +12,12 @@ from fastapi.responses import JSONResponse
 
 logger = setup_logging()
 
-# =======================
-# Конфигурация
-# =======================
-STORAGE_DIR = Path(Config.IMG_STORAGE)
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-rds = redis.from_url(Config.REDIS_URL, decode_responses=True)
-
 app = FastAPI(title="PCD Processing API")
 
+STORAGE_DIR = Path(Config.IMG_STORAGE)
+rds = redis.from_url(Config.REDIS_URL, decode_responses=True)
 pcd_service = PCDService(STORAGE_DIR, rds)
 
-# =======================
-# Маршруты
-# =======================
 
 @app.post("/api/upload_pcd",
           tags=["PCD"],
@@ -53,7 +42,6 @@ async def upload_pcd(file: UploadFile):
                             detail="Ошибка при сохранении файла") from exc
 
     return JSONResponse({"uid": uid, "status": "processing"})
-
 
 
 @app.get("/api/status",

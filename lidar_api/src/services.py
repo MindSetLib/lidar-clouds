@@ -1,12 +1,29 @@
-from typing import Optional
+from typing import List, Optional
 from pathlib import Path
-from ocr_configurations import Config, setup_logging
-from fastapi import FastAPI, UploadFile
+from ocr_configurations import CelerySender, CeleryTaskParams, setup_logging
+from fastapi import UploadFile
 import redis
 
 
-
 logger = setup_logging()
+
+
+def send_to_detector(
+        uid_request: str,
+        files: List[str]):
+    """Отправить задачу на модель детекции."""
+
+    task_kwargs = {
+        'uid_request': uid_request,
+        'files': files,
+    }
+    queue_params = CeleryTaskParams(
+        queue_name='detector',
+        task_name='get_lidar_boxes',
+        kwargs=task_kwargs,
+    )
+    task_id = CelerySender().send_to_queue(queue_params)
+    return task_id
 
 
 class PCDService:
@@ -24,12 +41,14 @@ class PCDService:
         with open(filepath, "wb") as f:
             f.write(file.file.read())
         logger.info("Файл сохранен: %s", filepath)
-        return str(filepath)
+        return str(filename)
 
     def enqueue(self, file_path: str, uid: str):
         """Отправка задачи в очередь (имитация)."""
-        # TODO: celery_app.send_task("detector.process", args=[file_path, uid])
-        logger.info("Файл %s отправлен в очередь", file_path)
+        send_to_detector(
+            uid_request=uid,
+            files=[file_path],)
+        logger.info("Файл %s на детектор", file_path)
 
     def set_status(self, uid: str, status: str):
         self.rds.set(uid, status)
