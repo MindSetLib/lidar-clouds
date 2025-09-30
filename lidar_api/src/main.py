@@ -16,17 +16,15 @@ logger = setup_logging()
 # Конфигурация
 # =======================
 STORAGE_DIR = Path(Config.IMG_STORAGE)
-REDIS_HOST = "redis"
-REDIS_PORT = 6379
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-rds = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+rds = redis.from_url(Config.REDIS_URL, decode_responses=True)
 
 app = FastAPI(title="PCD Processing API")
 
-pcd_service = PCDService(STORAGE_DIR)
+pcd_service = PCDService(STORAGE_DIR, rds)
 
 # =======================
 # Маршруты
@@ -37,6 +35,13 @@ pcd_service = PCDService(STORAGE_DIR)
           description="Загрузка PCD файла и постановка в очередь")
 async def upload_pcd(file: UploadFile):
     """Прием PCD файла от фронта. UID генерируется на бэке."""
+    # --- проверка расширения ---
+    if not file.filename.lower().endswith(".pcd"):
+        raise HTTPException(
+            status_code=400,
+            detail="Файл должен быть в формате .pcd"
+        )
+
     uid = uuid.uuid4().hex
     try:
         file_path = pcd_service.save_file(file, uid)
@@ -48,6 +53,7 @@ async def upload_pcd(file: UploadFile):
                             detail="Ошибка при сохранении файла") from exc
 
     return JSONResponse({"uid": uid, "status": "processing"})
+
 
 
 @app.get("/api/status",

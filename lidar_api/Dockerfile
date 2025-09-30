@@ -70,5 +70,3 @@ RUN poetry install \
 RUN groupadd -g ${RUNASUSER} -r ${USERNAME} && \
     useradd -u ${RUNASUSER} -r -g ${USERNAME} -d ${HOME} -s /sbin/nologin -c "Docker image user" ${USERNAME} && \
     chown -R ${USERNAME}:${USERNAME} ${APP_HOME}
-
-USER ${USERNAME}

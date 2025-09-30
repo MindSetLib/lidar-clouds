@@ -39,35 +39,15 @@ class Config:
     # Максимальный таймаут, секунд
     MAX_TIMEOUT_RETRY = int(os.environ.get('MAX_TIMEOUT_RETRY'))
 
-    # Настройка отправки логирования в Sentry
-    SENTRY_DSN = os.environ.get('SENTRY_DSN')
     # Токен для ограничения доступа к api
     SECRET_TOKEN = os.environ.get('SECRET_TOKEN')
 
-    # Внешний Api для скачки документов
-    OUT_IMG_HOST = os.environ.get('OUT_IMG_HOST')
-    AUTH_HOST = os.environ.get('AUTH_HOST')
-    # Маршрут
-    OUT_API_ROUT = os.environ.get('OUT_API_ROUT')
-    SPECIAL_DOWNLOAD_LINK = f'http://{OUT_IMG_HOST}/{OUT_API_ROUT}'
     # Количество одновременных асинхронных задач
     # - сколько параллельных скачиваний возможно
     CONCURRENT_TASKS = 5
     # Время ожидания ответа на запрос с внешнего апи, секунд
     HTTP_TIMEOUT = 60
 
-    # Внешний Api для получения данных по ИНН
-    CONTRACTOR_HOST = os.environ.get('CONTRACTOR_HOST')
-    CONTRACTOR_USER = os.environ.get('CONTRACTOR_USER')
-    CONTRACTOR_PASSWORD = os.environ.get('CONTRACTOR_PASSWORD')
-
-    # BIK downloader - скачивание справочника БИК банков с сайта ЦБ
-    BIK_LINK = os.environ.get('BIK_LINK')
-    BIK_DIST_DIR = os.path.join(IMG_STORAGE, 'bik_data')
-    XML_FILE_NAME = os.environ.get('XML_FILE_NAME')
-    XML_FILE_PATH = os.path.join(BIK_DIST_DIR, XML_FILE_NAME) if XML_FILE_NAME else None
-    BIK_CSV = os.path.join(BIK_DIST_DIR, 'biks.csv')
-    BIK_REV_DAY = 10  # Актуальность файла в днях.
 
     # S3 Хранилище - скачивание весов моделей
     S3_ACCESS_KEY_ID = os.environ.get('S3_ACCESS_KEY_ID')

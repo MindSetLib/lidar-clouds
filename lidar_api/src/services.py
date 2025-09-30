@@ -2,6 +2,8 @@ from typing import Optional
 from pathlib import Path
 from ocr_configurations import Config, setup_logging
 from fastapi import FastAPI, UploadFile
+import redis
+
 
 
 logger = setup_logging()
@@ -10,8 +12,9 @@ logger = setup_logging()
 class PCDService:
     """Работа с загрузкой PCD и постановкой в очередь."""
 
-    def __init__(self, storage_dir: Path):
+    def __init__(self, storage_dir: Path, rds: redis.Redis):
         self.storage_dir = storage_dir
+        self.rds = rds
 
     def save_file(self, file: UploadFile, uid: str) -> str:
         """Сохраняем файл и возвращаем путь."""
@@ -29,7 +32,7 @@ class PCDService:
         logger.info("Файл %s отправлен в очередь", file_path)
 
     def set_status(self, uid: str, status: str):
-        rds.set(uid, status)
+        self.rds.set(uid, status)
 
     def get_status(self, uid: str) -> Optional[str]:
-        return rds.get(uid)
+        return self.rds.get(uid)
