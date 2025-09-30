@@ -12,7 +12,12 @@ from fastapi.responses import JSONResponse
 
 logger = setup_logging()
 
-app = FastAPI(title="PCD Processing API")
+app = FastAPI(
+    title="PCD API",
+    openapi_url="/api/openapi.json",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc"
+)
 
 STORAGE_DIR = Path(Config.IMG_STORAGE)
 rds = redis.from_url(Config.REDIS_URL, decode_responses=True)

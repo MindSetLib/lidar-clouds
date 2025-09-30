@@ -1,0 +1,16 @@
+version: "3.9"
+
+networks:
+  ml_lidar:
+    external: true
+
+services:
+  lidar_nginx:
+    build: ./nginx
+    restart: always
+    volumes:
+      - ${DATA_PATH}/file_storage:/var/www/lidar_files
+    ports:
+      - ${APP_PORT}:80
+    networks:
+      - ml_lidar

@@ -32,7 +32,6 @@ docker run -d \
   --network $NETWORK_NAME \
   --restart unless-stopped \
   --env-file .env \
-  -p ${APP_PORT}:8000 \
   -v $(pwd)/src:/home/app/src \
   -v ${DATA_PATH}/file_storage:/home/app/src/file_storage \
   -v /home/mindset_dev/dev/lidar-clouds/ocr_configurations/ocr_configurations:/home/app/src/ocr_configurations \
@@ -41,3 +40,5 @@ docker run -d \
 
 echo ">>> Контейнеры:"
 docker ps --filter "name=$CONTAINER_NAME"
+
+  # -p ${APP_PORT}:8000 \
