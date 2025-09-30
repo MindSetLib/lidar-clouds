@@ -1,0 +1,76 @@
+from typing import Optional
+import uuid
+import logging
+from pathlib import Path
+import uvicorn
+from services import PCDService
+from ocr_configurations import Config, setup_logging
+
+import redis
+from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
+
+logger = setup_logging()
+
+# =======================
+# Конфигурация
+# =======================
+STORAGE_DIR = Path(Config.IMG_STORAGE)
+REDIS_HOST = "redis"
+REDIS_PORT = 6379
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+rds = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+
+app = FastAPI(title="PCD Processing API")
+
+pcd_service = PCDService(STORAGE_DIR)
+
+# =======================
+# Маршруты
+# =======================
+
+@app.post("/api/upload_pcd",
+          tags=["PCD"],
+          description="Загрузка PCD файла и постановка в очередь")
+async def upload_pcd(file: UploadFile):
+    """Прием PCD файла от фронта. UID генерируется на бэке."""
+    uid = uuid.uuid4().hex
+    try:
+        file_path = pcd_service.save_file(file, uid)
+        pcd_service.enqueue(file_path, uid)
+        pcd_service.set_status(uid, "processing")
+    except Exception as exc:
+        logger.exception("Ошибка загрузки PCD")
+        raise HTTPException(status_code=500,
+                            detail="Ошибка при сохранении файла") from exc
+
+    return JSONResponse({"uid": uid, "status": "processing"})
+
+
+@app.get("/api/status",
+         tags=["PCD"],
+         description="Проверка статуса обработки PCD")
+async def get_status(uid: str):
+    """Возврат статуса или имени готового файла."""
+    try:
+        status = pcd_service.get_status(uid)
+    except Exception as exc:
+        logger.exception("Ошибка Redis для uid=%s", uid)
+        raise HTTPException(status_code=500,
+                            detail="Не удалось получить статус") from exc
+
+    if status is None:
+        raise HTTPException(status_code=404, detail="UID не найден")
+
+    if status == "ready":
+        result_name = f"cleaned_{uid}.pcd"
+        return JSONResponse({"uid": uid, "status": status,
+                             "result_file": result_name})
+    return JSONResponse({"uid": uid, "status": status})
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
