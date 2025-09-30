@@ -1,0 +1,75 @@
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+class Config:
+    """Base application configs."""
+
+    BASE_DIR = os.environ.get("BASE_DIR", os.getcwd())
+    IMG_STORAGE = os.path.join(BASE_DIR, 'file_storage')
+    TEST_FILES_STORAGE = os.path.join(BASE_DIR, 'test_storage')
+
+    # Настройки очереди
+    REDIS_URL = os.environ.get('REDIS_URL')
+    BROKER_URL = os.environ.get('BROKER_URL')
+
+    # DB
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
+    DB_ECHO = False
+
+    # БД в Redis
+    REDIS_HOST = os.environ.get('REDIS_HOST')
+    REDIS_PORT = os.environ.get('REDIS_PORT')
+    REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD')
+    REDIS_DB = os.environ.get('REDIS_DB')
+    # Допустимое время просрочки записи в редис в днях
+    DAY_TIMEOUT = 1
+
+    # Актуальность созданных директорий в днях
+    DIR_REV_DAY = 1
+
+    # Конфигурация повторов выполнения задач
+    # Количество попыток
+    COUNT_ATTEMPTS = int(os.environ.get('COUNT_ATTEMPTS'))
+    # Стартовый таймаут, секунд
+    COUNTDOWN = int(os.environ.get('COUNTDOWN'))
+    # Максимальный таймаут, секунд
+    MAX_TIMEOUT_RETRY = int(os.environ.get('MAX_TIMEOUT_RETRY'))
+
+    # Настройка отправки логирования в Sentry
+    SENTRY_DSN = os.environ.get('SENTRY_DSN')
+    # Токен для ограничения доступа к api
+    SECRET_TOKEN = os.environ.get('SECRET_TOKEN')
+
+    # Внешний Api для скачки документов
+    OUT_IMG_HOST = os.environ.get('OUT_IMG_HOST')
+    AUTH_HOST = os.environ.get('AUTH_HOST')
+    # Маршрут
+    OUT_API_ROUT = os.environ.get('OUT_API_ROUT')
+    SPECIAL_DOWNLOAD_LINK = f'http://{OUT_IMG_HOST}/{OUT_API_ROUT}'
+    # Количество одновременных асинхронных задач
+    # - сколько параллельных скачиваний возможно
+    CONCURRENT_TASKS = 5
+    # Время ожидания ответа на запрос с внешнего апи, секунд
+    HTTP_TIMEOUT = 60
+
+    # Внешний Api для получения данных по ИНН
+    CONTRACTOR_HOST = os.environ.get('CONTRACTOR_HOST')
+    CONTRACTOR_USER = os.environ.get('CONTRACTOR_USER')
+    CONTRACTOR_PASSWORD = os.environ.get('CONTRACTOR_PASSWORD')
+
+    # BIK downloader - скачивание справочника БИК банков с сайта ЦБ
+    BIK_LINK = os.environ.get('BIK_LINK')
+    BIK_DIST_DIR = os.path.join(IMG_STORAGE, 'bik_data')
+    XML_FILE_NAME = os.environ.get('XML_FILE_NAME')
+    XML_FILE_PATH = os.path.join(BIK_DIST_DIR, XML_FILE_NAME) if XML_FILE_NAME else None
+    BIK_CSV = os.path.join(BIK_DIST_DIR, 'biks.csv')
+    BIK_REV_DAY = 10  # Актуальность файла в днях.
+
+    # S3 Хранилище - скачивание весов моделей
+    S3_ACCESS_KEY_ID = os.environ.get('S3_ACCESS_KEY_ID')
+    S3_SECRET_ACCESS_KEY = os.environ.get('S3_SECRET_ACCESS_KEY')
+    S3_ENDPOINT_URL = os.environ.get('S3_ENDPOINT_URL')

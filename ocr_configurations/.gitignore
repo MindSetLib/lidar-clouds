@@ -1,0 +1,53 @@
+zproba/
+
+# Python временные файлы
+*.py[cod]
+__pycache__/
+*.so
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+
+# Локальные настройки и файлы IDE/редактора
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Poetry виртуальное окружение (если используется внутри проекта)
+.venv/
+
+# Конфиденциальные файлы
+.env
+*.env
+
+# Логи и временные файлы
+*.log
+*.bak
+*.tmp
+*.temp
+*.old
+*.orig
+.DS_Store
+Thumbs.db
+
+# Pytest кэш и результаты
+.pytest_cache/
+htmlcov/
+.coverage
+
+# MyPy кэш
+.mypy_cache/
+
+# Black, isort, и другие форматеры/линтеры
+.cache/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Git hooks
+.hooks/

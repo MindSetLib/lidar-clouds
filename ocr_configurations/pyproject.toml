@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "ocr-configurations"
+version = "0.1.19"
+description = ""
+authors = ["Шихалиев Фрэнк Олегович <frank@mind-set.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-dotenv = "1.0.0"
+raven = "6.10.0"
+celery = "5.4.0"
+kombu = "5.5.4"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
