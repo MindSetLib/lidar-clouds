@@ -35,7 +35,13 @@ async def upload_pcd(file: UploadFile):
     try:
         file_path = pcd_service.save_file(file, uid)
         pcd_service.enqueue(file_path, uid)
-        pcd_service.set_status(uid, "processing")
+        pcd_service.set_status(
+            uid=uid,
+            status="processing",
+            src_filename=file.filename,
+            result_filename=None,
+            boxes=[]
+        )
     except Exception as exc:
         logger.exception("Ошибка загрузки PCD")
         raise HTTPException(status_code=500,

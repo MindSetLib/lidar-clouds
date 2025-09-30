@@ -3,6 +3,7 @@ from pathlib import Path
 from ocr_configurations import CelerySender, CeleryTaskParams, setup_logging
 from fastapi import UploadFile
 import redis
+import json
 
 
 logger = setup_logging()
@@ -50,8 +51,23 @@ class PCDService:
             files=[file_path],)
         logger.info("Файл %s на детектор", file_path)
 
-    def set_status(self, uid: str, status: str):
-        self.rds.set(uid, status)
+    def set_status(
+        self,
+        uid: str,
+        status: str,
+        src_filename: str,
+        result_filename: str | None = None,
+        boxes: list | None = None
+    ):
+        """Сохраняем все данные одним хэшем."""
+        value = {
+            "src_filename": src_filename,
+            "status": status,
+            "result_filename": result_filename or "",
+            "boxes": json.dumps(boxes or []),
+        }
+        self.rds.hset(uid, mapping=value)
 
-    def get_status(self, uid: str) -> Optional[str]:
-        return self.rds.get(uid)
+    def get_status(self, uid: str) -> Optional[dict]:
+        data = self.rds.hgetall(uid)
+        return data or None
