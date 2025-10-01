@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
+FROM nvidia/cuda:11.7.1-devel-ubuntu22.04
 
 # Каталоги
 ENV HOME=/home/app
@@ -87,38 +87,44 @@ RUN pip install \
     --index-url https://download.pytorch.org/whl/cu117 \
     --find-links https://download.pytorch.org/whl/cu117/torch_stable.html
 
-# spconv для CUDA 11.7
+# 2. spconv для CUDA 11.7
 RUN pip install spconv-cu117==2.3.6
 
-# Установка detectron2 (совместимая версия с torch 2.0.1+cu117)
+# 3. Установка detectron2 (совместимая версия с torch 2.0.1+cu117)
 RUN --mount=type=cache,target=/root/.cache \
     pip install 'git+https://github.com/facebookresearch/detectron2.git'
 
-# Клонируем репозиторий OpenPCDet
+# 4. Клонируем репозиторий OpenPCDet
 RUN git clone https://github.com/open-mmlab/OpenPCDet.git /workspace/OpenPCDet
 
-# Устанавливаем в editable-режиме, отключаем build isolation
-RUN pip install -e /workspace/OpenPCDet --no-deps --no-build-isolation
+# 5. Переходим в директорию OpenPCDet и делаем editable install
+WORKDIR /workspace/OpenPCDet
+RUN pip install --upgrade "setuptools<65" wheel
+ENV TORCH_CUDA_ARCH_LIST="7.0+PTX;8.6+PTX"
+RUN pip install -e . --no-deps --no-build-isolation
 
 
-
-
+# 6. Дополнительные пакеты
 RUN --mount=type=cache,target=/root/.cache \
-    pip install  \
+    pip install \
         timm==0.9.2 \
         ultralytics==8.3.103
 
+# 7. Возвращаемся в корень приложения и ставим Poetry-зависимости
+WORKDIR $APP_HOME
 COPY pyproject.toml poetry.lock ./
-# Установка Python-зависимостей через Poetry
-# любое значение кроме "true" считается прод-сборкой
-# docker build --build-arg IS_DEV=true -t myapp:dev .
-RUN poetry install \
-      $(test "$IS_DEV" != "true" && echo "--only=main") \
-      --no-interaction --no-ansi \
-      --no-root && \
-    rm -f $HOME/.config/pypoetry/auth.toml
 
-# Создаем пользователя и директории
-RUN groupadd -g ${RUNASUSER} -r ${USERNAME} && \
-    useradd -u ${RUNASUSER} -r -g ${USERNAME} -d ${HOME} -s /sbin/nologin -c "Docker image user" ${USERNAME} && \
-    chown -R ${USERNAME}:${USERNAME} ${APP_HOME}
+RUN apt remove -y python3-blinker || true
+RUN apt update && apt install -y iputils-ping dnsutils netcat
+RUN apt update && apt install -y ca-certificates && update-ca-certificates
+
+
+# RUN poetry install \
+#       $(test "$IS_DEV" != "true" && echo "--only=main") \
+#       --no-interaction --no-ansi --no-root && \
+#     rm -f $HOME/.config/pypoetry/auth.toml
+
+# # 8. Создаем пользователя и задаем права
+# RUN groupadd -g ${RUNASUSER} -r ${USERNAME} && \
+#     useradd -u ${RUNASUSER} -r -g ${USERNAME} -d ${HOME} -s /sbin/nologin -c "Docker image user" ${USERNAME} && \
+#     chown -R ${USERNAME}:${USERNAME} $APP_HOME /workspace/OpenPCDet
