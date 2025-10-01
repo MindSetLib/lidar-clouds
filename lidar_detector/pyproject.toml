@@ -30,10 +30,8 @@ easydict = "^1.13"
 tensorboardX = "^2.6"
 pyyaml = "^6.0"
 plotly = "^5.22.0"
+blinker = "1.9.0"
 
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.29.0"
-jupyterlab = "^4.4.7"
 
 [build-system]
 requires = ["poetry-core"]
