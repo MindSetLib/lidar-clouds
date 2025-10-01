@@ -14,3 +14,21 @@ services:
       - ${APP_PORT}:80
     networks:
       - ml_lidar
+
+
+  lidar_api:
+    build: ./lidar_api
+    image: lidar_api_img
+    container_name: lidar_api
+    hostname: lidar_api
+    restart: unless-stopped
+    env_file:
+      - ./.env
+      - ./lidar_api/.env
+    volumes:
+      - ./lidar_api/src:/home/app/src
+      - ${DATA_PATH}/file_storage:/home/app/src/file_storage
+      - ./ocr_configurations/ocr_configurations:/home/app/src/ocr_configurations
+    command: python3 main.py
+    networks:
+      - ml_lidar
