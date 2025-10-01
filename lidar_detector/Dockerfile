@@ -1,21 +1,14 @@
 FROM nvidia/cuda:11.7.1-devel-ubuntu22.04
 
-# Каталоги
+# -----------------------------
+# Настройки окружения
+# -----------------------------
 ENV HOME=/home/app
 ENV APP_HOME=/home/app/src
 ENV PYTHONPATH=${HOME}
-# Добавление пути до poetry
 ENV PATH="${HOME}/.local/bin:$PATH"
-# Путь до python 3.9
-ENV PYTHONPATH="${HOME}:/usr/lib/python3.9/site-packages:/usr/local/lib/python3.9/dist-packages:$PATH"
-
-# Системное время
 ENV TZ=Europe/Moscow
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# Для установки без вопрсов пользователю, неинтерактивный режим
 ENV DEBIAN_FRONTEND=noninteractive
-# Видимость видеокарт
 ENV NVIDIA_VISIBLE_DEVICES=all
 
 # Переменные pip и poetry
@@ -28,103 +21,107 @@ ENV POETRY_VERSION=2.1.3 \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100
 
-# Устанавливаем переменную от какого пользователя будет работать сервис
 ENV RUNASUSER=1234
 ENV USERNAME=app
 
-# переключатель: устанавливать dev-зависимости poetry или нет
 ARG IS_DEV
 
+# -----------------------------
+# Системное время
+# -----------------------------
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Добавление репозитория
-RUN apt update && apt install -y \
-    software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa
+# -----------------------------
+# Добавление репозитория и установка Python 3.9
+# -----------------------------
+RUN apt update && apt install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt update && apt install -y --no-install-recommends \
+        g++ \
+        python3.9 \
+        python3.9-distutils \
+        python3.9-dev \
+        git \
+        wget \
+        curl \
+        libgl1 \
+        poppler-utils \
+        ffmpeg \
+        libsm6 \
+        libxext6 \
+        ca-certificates \
+    && apt clean -y && rm -rf /var/lib/apt/lists/*
 
+# -----------------------------
+# Настройка pip и Python 3.9
+# -----------------------------
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3.9 get-pip.py && \
+    rm get-pip.py && \
+    pip3.9 install --upgrade pip setuptools wheel && \
+    ln -sf /usr/bin/python3.9 /usr/bin/python && \
+    ln -sf /usr/bin/pip3.9 /usr/bin/pip
 
-# Установка Python и других пакетов
-RUN apt update && apt install -y --no-install-recommends \
-    g++ \
-    python3.9 \
-    python3.9-distutils \
-    python3.9-dev \
-    git \
-    wget \
-    curl \
-    libgl1 \
-    poppler-utils \
-    ffmpeg \
-    libsm6 \
-    libxext6 \
-    && apt clean -y && apt autoclean -y && rm -rf /var/lib/apt/lists/*
-
-
-# Установка pip и необходимых инструментов для Python 3.9
-RUN wget https://bootstrap.pypa.io/get-pip.py \
-    && python3.9 get-pip.py \
-    && rm get-pip.py \
-    && pip3.9 install -U pip setuptools \
-    && ln -s /usr/bin/python3.9 /usr/bin/python \
-    && ln -s /usr/bin/pip3.9 /usr/bin/pip \
-    && rm -rf /var/lib/apt/lists/*
-
-# Установка poetry
-RUN apt update && apt install -y \
-    python3-dev \
-    build-essential && \
-    curl -sSL https://install.python-poetry.org | python3.9 - && \
-    apt clean -y && apt autoclean -y && rm -rf /var/lib/apt/lists/*
-
+# -----------------------------
+# Установка Poetry
+# -----------------------------
+RUN curl -sSL https://install.python-poetry.org | python3.9 - && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR $APP_HOME
 
+# -----------------------------
+# Heavy-binary зависимости через pip
+# -----------------------------
+RUN pip install --upgrade \
+        torch==2.0.1+cu117 \
+        torchvision==0.15.2+cu117 \
+        torchaudio==2.0.2+cu117 \
+        --index-url https://download.pytorch.org/whl/cu117 \
+        --find-links https://download.pytorch.org/whl/cu117/torch_stable.html
 
-# Установка специфичных и тяжелых зависимостей
-RUN pip install \
-    torch==2.0.1+cu117 \
-    torchvision==0.15.2+cu117 \
-    torchaudio==2.0.2+cu117 \
-    --index-url https://download.pytorch.org/whl/cu117 \
-    --find-links https://download.pytorch.org/whl/cu117/torch_stable.html
-
-# 2. spconv для CUDA 11.7
 RUN pip install spconv-cu117==2.3.6
 
-# 3. Установка detectron2 (совместимая версия с torch 2.0.1+cu117)
-RUN --mount=type=cache,target=/root/.cache \
-    pip install 'git+https://github.com/facebookresearch/detectron2.git'
+RUN pip install 'git+https://github.com/facebookresearch/detectron2.git'
 
-# 4. Клонируем репозиторий OpenPCDet
+# -----------------------------
+# OpenPCDet
+# -----------------------------
 RUN git clone https://github.com/open-mmlab/OpenPCDet.git /workspace/OpenPCDet
-
-# 5. Переходим в директорию OpenPCDet и делаем editable install
 WORKDIR /workspace/OpenPCDet
 RUN pip install --upgrade "setuptools<65" wheel
 ENV TORCH_CUDA_ARCH_LIST="7.0+PTX;8.6+PTX"
 RUN pip install -e . --no-deps --no-build-isolation
 
+# -----------------------------
+# Дополнительные пакеты
+# -----------------------------
+RUN pip install timm==0.9.2 ultralytics==8.3.103
 
-# 6. Дополнительные пакеты
-RUN --mount=type=cache,target=/root/.cache \
-    pip install \
-        timm==0.9.2 \
-        ultralytics==8.3.103
-
-# 7. Возвращаемся в корень приложения и ставим Poetry-зависимости
+# -----------------------------
+# Poetry зависимости (pure-Python)
+# -----------------------------
 WORKDIR $APP_HOME
 COPY pyproject.toml poetry.lock ./
 
+# Удаляем конфликтные системные пакеты, чтобы Poetry смог обновить
 RUN apt remove -y python3-blinker || true
-RUN apt update && apt install -y iputils-ping dnsutils netcat
-RUN apt update && apt install -y ca-certificates && update-ca-certificates
 
+# Здесь Poetry ставит только чистые Python зависимости
+RUN poetry install \
+      $(test "$IS_DEV" != "true" && echo "--only=main") \
+      --no-interaction --no-ansi --no-root && \
+    rm -f $HOME/.config/pypoetry/auth.toml
+# -----------------------------
+# Утилиты
+# -----------------------------
+RUN apt update && apt install -y iputils-ping dnsutils netcat && apt clean -y
 
-# RUN poetry install \
-#       $(test "$IS_DEV" != "true" && echo "--only=main") \
-#       --no-interaction --no-ansi --no-root && \
-#     rm -f $HOME/.config/pypoetry/auth.toml
+# -----------------------------
+# Создание пользователя
+# -----------------------------
+RUN groupadd -g ${RUNASUSER} -r ${USERNAME} && \
+    useradd -u ${RUNASUSER} -r -g ${USERNAME} -d ${HOME} -s /sbin/nologin -c "Docker image user" ${USERNAME} && \
+    chown -R ${USERNAME}:${USERNAME} $APP_HOME /workspace/OpenPCDet
 
-# # 8. Создаем пользователя и задаем права
-# RUN groupadd -g ${RUNASUSER} -r ${USERNAME} && \
-#     useradd -u ${RUNASUSER} -r -g ${USERNAME} -d ${HOME} -s /sbin/nologin -c "Docker image user" ${USERNAME} && \
-#     chown -R ${USERNAME}:${USERNAME} $APP_HOME /workspace/OpenPCDet
+WORKDIR $APP_HOME
