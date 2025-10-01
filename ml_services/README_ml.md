@@ -213,7 +213,7 @@ data/opencdet_cubes/ImageSets/test.txt
 cd OpenPCDet
 
 poetry run python tools/demo.py \
-  --cfg_file tools/cfgs/nuscenes_models/cbgs_voxel0075_voxelnext.yaml \
+  --cfg_file ../data/cbgs_voxel0075_voxelnext.yaml \
   --ckpt ../data/voxelnext_nuscenes_kernel1.pth \
   --data_path ../data/opencdet_cubes/testing/velodyne \
   --ext .bin

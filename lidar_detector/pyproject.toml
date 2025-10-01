@@ -19,8 +19,8 @@ redis = "6.2.0"
 SQLAlchemy = "1.4.36"
 psycopg2-binary = "2.9.3"
 
-# Model
-numpy = "1.26.4"
+# Model - основные
+numpy = "1.23.5"
 scipy = "^1.11.4"
 scikit-image = "0.21.0"
 open3d = "^0.18.0"
@@ -31,9 +31,20 @@ tensorboardX = "^2.6"
 pyyaml = "^6.0"
 plotly = "^5.22.0"
 blinker = "1.9.0"
+scikit-learn = "<1.2"
+
+# OpenPCDet зависимости (которые мы доустанавливали)
+SharedArray = "^3.2.2"
+pyquaternion = "^0.9.9"
+numba = "^0.59.0"
+llvmlite = "^0.42.0"
+opencv-python = "^4.8.0"
+
+# Дополнительные для датасетов
+nuscenes-devkit = "^1.1.10"  # NuScenes
+addict = "^2.4.0"  # Для Open3D
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-

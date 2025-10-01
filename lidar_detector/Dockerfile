@@ -93,10 +93,15 @@ RUN pip install --upgrade "setuptools<65" wheel
 ENV TORCH_CUDA_ARCH_LIST="7.0+PTX;8.6+PTX"
 RUN pip install -e . --no-deps --no-build-isolation
 
+
 # -----------------------------
 # Дополнительные пакеты
 # -----------------------------
 RUN pip install timm==0.9.2 ultralytics==8.3.103
+
+# Устанавливаем av2
+RUN pip install av2==0.3.5
+
 
 # -----------------------------
 # Poetry зависимости (pure-Python)
@@ -109,13 +114,8 @@ RUN apt remove -y python3-blinker || true
 
 # Здесь Poetry ставит только чистые Python зависимости
 RUN poetry install \
-      $(test "$IS_DEV" != "true" && echo "--only=main") \
-      --no-interaction --no-ansi --no-root && \
-    rm -f $HOME/.config/pypoetry/auth.toml
-# -----------------------------
-# Утилиты
-# -----------------------------
-RUN apt update && apt install -y iputils-ping dnsutils netcat && apt clean -y
+      --no-interaction --no-ansi --no-root --only=main
+
 
 # -----------------------------
 # Создание пользователя
@@ -125,6 +125,6 @@ RUN groupadd -g ${RUNASUSER} -r ${USERNAME} && \
     chown -R ${USERNAME}:${USERNAME} $APP_HOME /workspace/OpenPCDet
 
 # Путь до python 3.9
-ENV PYTHONPATH="${HOME}:/usr/lib/python3.9/site-packages:/usr/local/lib/python3.9/dist-packages:$PATH"
+ENV PYTHONPATH="${HOME}:/usr/lib/python3.9/site-packages:/usr/local/lib/python3.9/dist-packages:/home/app/src/OpenPCDet:$PATH"
 
 WORKDIR $APP_HOME
