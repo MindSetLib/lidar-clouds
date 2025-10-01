@@ -80,12 +80,27 @@ WORKDIR $APP_HOME
 
 
 # Установка специфичных и тяжелых зависимостей
+RUN pip install \
+    torch==2.0.1+cu117 \
+    torchvision==0.15.2+cu117 \
+    torchaudio==2.0.2+cu117 \
+    --index-url https://download.pytorch.org/whl/cu117 \
+    --find-links https://download.pytorch.org/whl/cu117/torch_stable.html
+
+# spconv для CUDA 11.7
+RUN pip install spconv-cu117==2.3.6
+
+# Установка detectron2 (совместимая версия с torch 2.0.1+cu117)
 RUN --mount=type=cache,target=/root/.cache \
-    pip install \
-        --find-links https://download.pytorch.org/whl/torch_stable.html \
-        torch==1.10.0+cu111 \
-        torchvision==0.11.0+cu111 \
-        torchaudio==0.10.0
+    pip install 'git+https://github.com/facebookresearch/detectron2.git'
+
+# Клонируем репозиторий OpenPCDet
+RUN git clone https://github.com/open-mmlab/OpenPCDet.git /workspace/OpenPCDet
+
+# Устанавливаем в editable-режиме, отключаем build isolation
+RUN pip install -e /workspace/OpenPCDet --no-deps --no-build-isolation
+
+
 
 
 RUN --mount=type=cache,target=/root/.cache \
@@ -93,16 +108,12 @@ RUN --mount=type=cache,target=/root/.cache \
         timm==0.9.2 \
         ultralytics==8.3.103
 
-RUN --mount=type=cache,target=/root/.cache \
-    pip install \
-    --find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html \
-    detectron2
-
 COPY pyproject.toml poetry.lock ./
 # Установка Python-зависимостей через Poetry
 # любое значение кроме "true" считается прод-сборкой
 # docker build --build-arg IS_DEV=true -t myapp:dev .
-RUN $(test "$IS_DEV" != "true" && echo "--only=main") \
+RUN poetry install \
+      $(test "$IS_DEV" != "true" && echo "--only=main") \
       --no-interaction --no-ansi \
       --no-root && \
     rm -f $HOME/.config/pypoetry/auth.toml

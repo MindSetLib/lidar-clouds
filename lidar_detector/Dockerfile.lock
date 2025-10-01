@@ -1,0 +1,17 @@
+# Dockerfile.lock
+FROM python:3.9-slim
+
+# Устанавливаем curl, git и необходимые зависимости для poetry
+RUN apt update && apt install -y git curl build-essential && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+ENV PATH="/root/.local/bin:$PATH"
+
+# Копируем pyproject.toml
+WORKDIR /app
+COPY pyproject.toml .
+
+# Генерируем poetry.lock
+RUN poetry lock
