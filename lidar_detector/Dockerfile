@@ -124,4 +124,7 @@ RUN groupadd -g ${RUNASUSER} -r ${USERNAME} && \
     useradd -u ${RUNASUSER} -r -g ${USERNAME} -d ${HOME} -s /sbin/nologin -c "Docker image user" ${USERNAME} && \
     chown -R ${USERNAME}:${USERNAME} $APP_HOME /workspace/OpenPCDet
 
+# Путь до python 3.9
+ENV PYTHONPATH="${HOME}:/usr/lib/python3.9/site-packages:/usr/local/lib/python3.9/dist-packages:$PATH"
+
 WORKDIR $APP_HOME

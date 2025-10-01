@@ -24,7 +24,6 @@ services:
     restart: unless-stopped
     env_file:
       - ./.env
-      - ./lidar_api/.env
     volumes:
       - ./lidar_api/src:/home/app/src
       - ${DATA_PATH}/file_storage:/home/app/src/file_storage
@@ -32,3 +31,27 @@ services:
     command: python3 main.py
     networks:
       - ml_lidar
+
+
+  lidar_detector:
+    build: ./lidar_detector
+    image: lidar_detector_img
+    container_name: lidar_detector
+    hostname: lidar_detector
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    volumes:
+      - ./lidar_detector/src:/home/app/src
+      - ${DATA_PATH}/file_storage:/home/app/src/file_storage
+      - ./ocr_configurations/ocr_configurations:/home/app/src/ocr_configurations
+    networks:
+      - ml_lidar
+    command: >
+      celery -A main worker
+        --pool=solo
+        --loglevel=INFO
+        --without-gossip
+        --without-mingle
+        -n worker_detector@%h
+        -Q detector
