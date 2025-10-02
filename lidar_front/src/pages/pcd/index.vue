@@ -1,7 +1,7 @@
 <template>
   <div style="width: 100vw; height: 100vh; background: #202020">
     <div
-        v-show="(uploading || processing) && !done && !error"
+        v-show="(uploading || processing || renderingUpload) && !done && !error"
         class="loading-snackbar"
         style="position: fixed; left: 50%; top: 20px; transform: translateX(-50%)"
     >
@@ -19,6 +19,31 @@
       "
     >
       <UiFileField @change="upload" />
+      <div
+          v-if="localPCDList && Object.keys(localPCDList).length"
+          style="
+          margin-top: 10px;
+          border-radius: 0.5rem;
+          cursor: pointer;
+          background-color: #191919;
+          padding: 10px;
+        "
+      >
+        <div style="color: white; font-size: 12px">
+          <div>Ранее загруженные файлы:</div>
+          <div style="color: rgb(159 168 186); margin-top: 10px">
+            <div v-for="item in localPCDList">
+              <ui-badge
+                  :color="
+                  item?.status?.status === 'ready' ? 'success' : 'warning'
+                "
+                  @click="() => item?.uid && loadById(item?.uid)"
+              >{{ item?.status?.src_filename }}</ui-badge
+              >
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <UiBadge
         v-show="uploading"
@@ -33,6 +58,20 @@
       "
     >
       Загружаем файл на сервер: {{ loadingPercent }}%
+    </UiBadge>
+    <UiBadge
+        v-show="renderingUpload"
+        color="warning"
+        style="
+        width: fit-content;
+        position: fixed;
+        top: 72px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 50;
+      "
+    >
+      Загружаем файл для отображения: {{ loadingForRepresentPercent }}%
     </UiBadge>
     <UiBadge
         v-show="processing && !uploading"
@@ -50,7 +89,7 @@
     </UiBadge>
 
     <UiBadge
-        v-show="done"
+        v-show="done && !renderingUpload"
         color="success"
         style="
         width: fit-content;
@@ -253,11 +292,14 @@ const axiosInstance = axios.create({});
 
 const done = ref<boolean>(false);
 const error = ref<boolean>(false);
+const localPCDList = ref<object>({});
 const processing = ref<boolean>(false);
 const uploading = ref<boolean>(false);
 const currentTheme = ref<"light" | "dark">("dark");
 const pointCloud = ref(null);
 const loadingPercent = ref<number>(0);
+const renderingUpload = ref<boolean>(false);
+const loadingForRepresentPercent = ref<number>(0);
 const helpModal = ref<boolean>(false);
 
 const zoomIn = ref<boolean>(false);
@@ -326,6 +368,7 @@ function addBBox(center, size, color = 0xff0000) {
 const loader = new PCDLoader();
 
 const renderPCD = async (url: string) => {
+  renderingUpload.value = true;
   return new Promise((resolve, reject) => {
     loader.load(
         url,
@@ -396,10 +439,18 @@ const renderPCD = async (url: string) => {
               "camera distance:",
               distance,
           );
+          renderingUpload.value = false;
           resolve(points);
         },
-        () => {},
+        (progressEvent) => {
+          if (progressEvent.loaded && progressEvent.total) {
+            loadingForRepresentPercent.value = Math.round(
+                (progressEvent.loaded / progressEvent.total) * 100,
+            );
+          }
+        },
         (error) => {
+          renderingUpload.value = false;
           reject(error);
         },
     );
@@ -431,7 +482,6 @@ const uploadPCD = async (file: File) => {
 };
 
 const waitUntilLoad = (obj) => {
-  console.log("MY data", obj);
   processing.value = true;
   return new Promise(async (resolve, reject) => {
     let lastInfo = null;
@@ -440,6 +490,12 @@ const waitUntilLoad = (obj) => {
           "http://78.136.221.218:40023/api/status?uid=" + obj.uid,
       );
       lastInfo = info.data;
+      try {
+        const data = JSON.parse(localStorage.getItem("data")) || {};
+        data[lastInfo.uid] = lastInfo;
+        localStorage.setItem("data", JSON.stringify(data));
+      } finally {
+      }
       await wait(5000);
     }
     processing.value = false;
@@ -449,33 +505,34 @@ const waitUntilLoad = (obj) => {
       reject(lastInfo);
     }
   });
-  // lockFileUpload.value = false
 };
 
 const uploadPSDToServer = async (file: File) => {
   uploading.value = true;
   uploadPCD(file)
       .then((data) => {
-        waitUntilLoad(data)
-            .then((res) => {
-              console.log("PROGRAM DONE (OK)", res);
-              console.log("result filename:", res?.status?.result_filename);
-              done.value = true;
-              renderPCD(res?.status?.result_filename)
-                  .then(() => {
-                    done.value = true;
-                  })
-                  .catch(() => {
-                    done.value = false;
-                    error.value = true;
-                  });
-            })
-            .catch((err) => {
-              console.log("PROGRAM DONE (ERROR)", err.message);
-            });
+        loadById(data.uid);
       })
       .finally(() => {
         uploading.value = false;
+      });
+};
+
+const loadById = (id: string) => {
+  lockFileUpload.value = true;
+  waitUntilLoad({ uid: id })
+      .then((res) => {
+        renderPCD(res?.status?.result_filename)
+            .then(() => {
+              done.value = true;
+            })
+            .catch(() => {
+              done.value = false;
+              error.value = true;
+            });
+      })
+      .catch((err) => {
+        console.log("PROGRAM DONE (ERROR)", err.message);
       });
 };
 
@@ -485,25 +542,7 @@ const upload = async (f) => {
   lockFileUpload.value = true;
   uploadPSDToServer(f.target.files[0]);
   /*
-  waitUntilLoad({ uid: "799b7f36199649f9ab1b83f9568a90a6" })
-    .then((res) => {
-      console.log('PROGRAM DONE (OK)', res)
-      console.log('result filename:', res?.status?.result_filename)
-      console.log('Trying to render ACCEPTED FILE:')
-      // renderPCD(res?.status?.result_filename)
-      done.value = true;
-      renderPCD('file:///home/albert/%D0%97%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B8/prpoba.pcd')
-          .then(() => {
-            done.value = true;
-          })
-          .catch(() => {
-            done.value = false
-            error.value = true
-          })
-    })
-    .catch((err) => {
-      console.log('PROGRAM DONE (ERROR)', err.message);
-    })
+  loadById("799b7f36199649f9ab1b83f9568a90a6");
    */
 
   renderPCD(urlObject).finally(() => {
@@ -709,6 +748,10 @@ function animate() {
 onMounted(() => {
   document.getElementById("container").appendChild(renderer.domElement);
   animate();
+  const data = JSON.parse(window.localStorage.getItem("data")) || {};
+  if (data instanceof Object) {
+    localPCDList.value = data;
+  }
 });
 </script>
 <style>
