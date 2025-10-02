@@ -1,0 +1,125 @@
+@use '@/styles/variables' as *;
+
+.btn-help {
+  position: absolute;
+  bottom: 48px;
+  right: 48px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
+
+  @media only screen and (max-width: 960px) {
+    bottom: 24px;
+    right: 74px;
+  }
+}
+.tooltip-help-mobile {
+  display: none;
+  @media only screen and (max-width: 960px) {
+    display: initial;
+  }
+}
+
+.tooltip-help {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  position: absolute;
+  width: 219px;
+  height: 232px;
+  background-color: $secondary-color;
+  color: $primary-color;
+  padding: 24px 16px;
+  border-radius: 24px;
+  bottom: 110px;
+  right: 30px;
+  z-index: 21;
+  pointer-events: none;
+
+  @media only screen and (max-width: 960px) {
+    display: none;
+  }
+}
+
+.tooltip-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tooltip-help-close {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  background-color: transparent;
+  pointer-events: auto;
+}
+
+.tooltip-item {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: 10px;
+  color: $primary-color;
+  text-align: center;
+  font-family: 'Gordita', sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+@media only screen and (max-width: 960px) {
+  .tooltip-help-mobile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 16px;
+    position: absolute;
+    width: 210px;
+    // max-height: 230px;
+    color: $primary-color;
+    background-color: $secondary-color;
+    padding: 16px;
+    border-radius: 8px;
+    bottom: 70px;
+    right: calc(50% - 110px);
+    z-index: 21;
+    pointer-events: none;
+  }
+
+  .tooltip-help-close {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    background-color: transparent;
+    pointer-events: auto;
+  }
+
+  .tooltip-help-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $primary-color;
+    text-align: center;
+    font-family: 'Gordita', sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  .tooltip-item {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: 10px;
+    color: $primary-color;
+    text-align: center;
+    font-family: 'Gordita', sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+  }
+}
