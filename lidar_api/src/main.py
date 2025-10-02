@@ -9,6 +9,7 @@ from ocr_configurations import Config, setup_logging
 import redis
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 logger = setup_logging()
 
@@ -17,6 +18,15 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
     docs_url="/api/docs",
     redoc_url="/api/redoc"
+)
+
+# --- CORS ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # можно ограничить конкретными доменами
+    allow_credentials=True,
+    allow_methods=["*"],  # все методы: GET, POST, PUT, DELETE, OPTIONS...
+    allow_headers=["*"],  # любые заголовки
 )
 
 STORAGE_DIR = Path(Config.IMG_STORAGE)
