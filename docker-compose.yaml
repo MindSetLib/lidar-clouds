@@ -10,6 +10,8 @@ services:
     restart: always
     volumes:
       - ${DATA_PATH}/file_storage:/var/www/lidar_files
+      # Фронтенд билд
+      - ./lidar_front/dist:/var/www/html
     ports:
       - ${APP_PORT}:80
     networks:
