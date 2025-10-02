@@ -1,0 +1,27 @@
+# Общая директория для всех волюмов
+DATA_PATH=./data_ocr  # CHANGE ME
+
+
+# Задаем внешние порты для сервисов
+APP_PORT=<port>  # CHANGE ME
+
+# переключатель: устанавливать dev-зависимости poetry или нет
+# любое значение кроме "true", в т.ч. отсутствие, считается прод-сборкой
+IS_DEV=true
+
+# Общие настройки
+# Соединение к очереди кэш хранилищу
+REDIS_URL=redis://:password@host:port/db_num0  # CHANGE ME
+BROKER_URL=amqp://login:password@host:port//  # CHANGE ME
+
+# Соединение к базе данных
+SQLALCHEMY_DATABASE_URI=postgresql://user:password@host:port/db_name  # CHANGE ME
+
+
+# Конфигурация повторной постановки задач в случае провала
+# Количество попыток
+COUNT_ATTEMPTS=1
+# Стартовый таймаут, секунд. Последующие повторы будут по экспоненте COUNTDOWN*2^номер_попытки
+COUNTDOWN=3
+# Максимальный таймаут, секунд
+MAX_TIMEOUT_RETRY=3600
