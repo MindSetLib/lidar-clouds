@@ -74,7 +74,7 @@
       Загружаем файл для отображения: {{ loadingForRepresentPercent }}%
     </UiBadge>
     <UiBadge
-        v-show="processing && !uploading"
+        v-show="processing && !uploading && !renderingUpload"
         color="warning"
         style="
         width: fit-content;
