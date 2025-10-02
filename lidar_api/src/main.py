@@ -47,6 +47,7 @@ async def upload_pcd(file: UploadFile):
         )
 
     uid = uuid.uuid4().hex
+    logger.info('%s - Сохраняю файл: %s', uid, file.filename)
     try:
         file_path = pcd_service.save_file(file, uid)
         pcd_service.enqueue(file_path, uid)

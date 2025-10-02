@@ -63,7 +63,9 @@ class PCDService:
         value = {
             "src_filename": src_filename,
             "status": status,
+            "comment": "Файл отправлен на детектор",
             "result_filename": result_filename or "",
+            "boxes_json_filename": "",
             "boxes": json.dumps(boxes or []),
         }
         self.rds.hset(uid, mapping=value)
