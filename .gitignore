@@ -169,7 +169,6 @@ venv.bak/
 
 # sftp configuration file 
 sftp-config.json
-*.json
 *.mo
 
 # Package control specific files Package 
