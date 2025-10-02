@@ -461,7 +461,7 @@ const uploadPSDToServer = async (file: File) => {
               console.log("PROGRAM DONE (OK)", res);
               console.log("result filename:", res?.status?.result_filename);
               done.value = true;
-              renderPCD(res?.status?.result_filename,)
+              renderPCD(res?.status?.result_filename)
                   .then(() => {
                     done.value = true;
                   })
