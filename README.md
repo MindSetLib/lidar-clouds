@@ -100,6 +100,11 @@ server {
 
 ## Запуск
 
+> Для использования сервиса необходимы инфраструктурные сервисы (Redis, Rabbit, Postress) \
+Для их разворачивания воспользуйтесь репозиторием `lidar-back-infra` \
+https://github.com/MindSetLib/lidar-back-infra
+
+
 1. Настройте `.env` (см. `env_example`).
 2. Сборка фронтенда:
 
