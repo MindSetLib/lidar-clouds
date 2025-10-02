@@ -34,8 +34,10 @@ def main(img_storage: str, file_name: str):
     
     src_file = os.path.join(img_storage, file_name)
     clean_file_name = os.path.splitext(file_name)[0]
-    result_file = os.path.join(img_storage, f"cleaned_{clean_file_name}.pcd")
-    boxes_file = os.path.join(img_storage, f"boxes_{clean_file_name}.npz")
+    result_file = f"cleaned_{clean_file_name}.pcd"
+    result_file_full = os.path.join(img_storage, result_file)
+    boxes_file = f"boxes_{clean_file_name}.npz"
+    boxes_file_full = os.path.join(img_storage, boxes_file)
     boxes_file_json = boxes_file.replace(".npz", ".json")
     
     
@@ -43,8 +45,8 @@ def main(img_storage: str, file_name: str):
     parser.add_argument("--pcd", default=str(src_file), help="Входной PCD")
     parser.add_argument("--ckpt", default=str(ROOT_DIR / "data" / "voxelnext_nuscenes_kernel1.pth"), help="Чекпойнт модели")
     parser.add_argument("--out_root", default=str(ROOT_DIR / "data" / "opencdet_cubes"), help="Папка для тайлов")
-    parser.add_argument("--merged_npz", default=str(boxes_file))
-    parser.add_argument("--clean_pcd", default=str(result_file))
+    parser.add_argument("--merged_npz", default=str(boxes_file_full))
+    parser.add_argument("--clean_pcd", default=str(result_file_full))
 
     # параметры разбиения
     parser.add_argument("--bin_size", type=int, default=50)
@@ -116,8 +118,8 @@ def main(img_storage: str, file_name: str):
     log(f"📁 Объединённые предсказания: {args.merged_npz}")
     
     result = {
-        "result_filename": result_file,
-        "boxes_json_filename": boxes_file_json
+        "result_filename": f"http://78.136.221.218:40023/files/{result_file}",
+        "boxes_json_filename": f"http://78.136.221.218:40023/files/{boxes_file_json}"
     }
 
     return result

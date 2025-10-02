@@ -61,18 +61,18 @@ def get_lidar_boxes(task_self, **kwargs) -> bool:
     file_name = kwargs.get('files')[0]
     img_storage = Config.IMG_STORAGE
     logger.info('%s - Передаю файл на обработку детектору: %s', uid_request, file_name)
-    predict = main(img_storage, file_name)
     
+    predict = main(img_storage, file_name)
     result_filename = predict.get("result_filename")
     boxes_json_filename = predict.get("boxes_json_filename")
     logger.info('%s - Обновляю запись в Redis: %s', uid_request, predict)
     
-    # result_filename = "prpoba.pcd"
-    # boxes_json_filename = "proba.json"
+    # result_filename = "http://78.136.221.218:40023/files/prpoba.pcd"
+    # boxes_json_filename = "http://78.136.221.218:40023/files/proba.json"
     
     status = 'ready'
     comment = "Файл обработан детектором"
-
+    logger.info('%s - Обновляю запись в Redis: %s, %s, %s', uid_request, result_filename, boxes_json_filename, status)
     update_status_files(
         uid_request,
         result_filename,
