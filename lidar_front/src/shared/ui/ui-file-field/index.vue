@@ -18,8 +18,8 @@
           />
         </svg>
         <p class="upload-text-primary">
-          <span class="upload-text-bold">Нажмите для загруки</span> или
-          перетащите
+          <span class="upload-text-bold">Нажмите для загруки</span> <!--или
+          перетащите-->
         </p>
         <p class="upload-text-secondary">PCD-файл</p>
       </div>
